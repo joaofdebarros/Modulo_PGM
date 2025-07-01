@@ -18,6 +18,7 @@ volatile uint8_t Buffer_TX[TAMANHO_BUFFER] = {0};
 volatile bool pacote_completo = false;
 volatile bool recebendo = false;
 volatile bool pacote_obsoleto = false;
+volatile bool cadastrado = false;
 
 //Variáveis do pacote
 #define start_byte 0x7E
@@ -160,20 +161,7 @@ void Controle(){
 		case INICIO:	
 		{
 			
-			XMC_GPIO_SetOutputHigh(Bus_Controle_PORT, Bus_Controle_PIN);
-			if(pacote_completo)
-			{
-				if(Rx_buffer[5] == 'A')
-				{
-					estado = GET_UID;
-				}else if(Rx_buffer[5] == 'S')
-				{
-					estado = STATUS_RL;
-				}else if(Rx_buffer[5] == 'T')
-				{
-					estado = RL_CONTROL;
-				}
-			}
+			
 			
 	
 			
@@ -298,7 +286,7 @@ void Controle(){
 		case TRANSMIT:
 		{
 			
-			delay_tx = systick + 50;
+			delay_tx = systick + 5;
 			aguardando_envio = true;		    
 		    estado = DELAY_ENVIO;
 			
