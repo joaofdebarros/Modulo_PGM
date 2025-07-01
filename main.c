@@ -164,17 +164,21 @@ void Controle(){
 			XMC_GPIO_SetOutputHigh(Bus_Controle_PORT, Bus_Controle_PIN);
 			if(pacote_completo)
 			{
-				if(Rx_buffer[5] == 'A')
+				if(Rx_buffer[5] == 'A' && !cadastrado)
+				{
+					cadastrado = true;
+					estado = GET_UID;
+				}else if(Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3 && cadastrado)
 				{
 					
-					estado = GET_UID;
-				}else if(Rx_buffer[5] == 'S')
-				{
-//					cadastrado = true;
 					estado = STATUS_RL;
-				}else if(Rx_buffer[5] == 'T')
+				}else if(Rx_buffer[5] == 'T' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3 && cadastrado)
 				{
+					
 					estado = RL_CONTROL;
+				}else{
+					pacote_obsoleto = true;
+					estado = LIMPAR;
 				}
 			}
 			
