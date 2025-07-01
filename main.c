@@ -161,7 +161,22 @@ void Controle(){
 		case INICIO:	
 		{
 			
-			
+			XMC_GPIO_SetOutputHigh(Bus_Controle_PORT, Bus_Controle_PIN);
+			if(pacote_completo)
+			{
+				if(Rx_buffer[5] == 'A')
+				{
+					
+					estado = GET_UID;
+				}else if(Rx_buffer[5] == 'S')
+				{
+//					cadastrado = true;
+					estado = STATUS_RL;
+				}else if(Rx_buffer[5] == 'T')
+				{
+					estado = RL_CONTROL;
+				}
+			}
 			
 	
 			
