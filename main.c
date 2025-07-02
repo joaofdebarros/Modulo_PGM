@@ -33,14 +33,15 @@ uint8_t checksum = 0;
 uint8_t estado = 0;
 
 //Variáveis de tempo/delays
-uint8_t Tempo_10ms = 10; 
-uint16_t Tempo_1000ms = 1000;
+uint8_t Tempo_200ms = 10; 
+uint16_t Tempo_3000ms = 1000;
 uint8_t piscadas = 0;
+uint8_t numero_modulo = 0;
 volatile uint32_t systick = 0;
 volatile uint32_t delay_tx = 0;
 volatile bool aguardando_envio = false;
-volatile bool acionar_10ms = false;
-volatile bool acionar_1000ms = false;
+volatile bool acionar_200ms = false;
+volatile bool acionar_3000ms = false;
 volatile bool piscando = false;
 
 //União bitflag
@@ -61,6 +62,17 @@ typedef union
 }FLAG0;
 
 FLAG0 status_rele, ligar_rele;
+
+typedef struct {
+	XMC_GPIO_PORT_t *port;
+	uint8_t pin;
+	uint8_t blink_count;
+	uint8_t blink_target;
+	bool piscando;
+} LED_t;
+
+LED_t leds[1] = {{LED_ST_PORT, LED_ST_PIN, 0, 0, false}};
+
 //Rotina para receber dados
 void USIC0_1_IRQHandler(void)
 {
@@ -123,6 +135,16 @@ void get_UID(){
 	UID2 = (UniqueChipID[0] >> 16) & 0xFF;
 	UID3 = (UniqueChipID[0] >> 24) & 0xFF;
 }
+
+void blink_led_ST(uint8_t n)
+{
+
+    leds[0].blink_target = n * 2; // *2 porque liga/desliga conta 2 vezes
+    leds[0].blink_count = 0;
+    leds[0].piscando = true;
+
+}
+
 //Rotina para controle dos tempos
 void SysTick_Handler(void)
 {
@@ -133,14 +155,35 @@ void SysTick_Handler(void)
 		ticks = 0;
 	}	
 	
-	if(--Tempo_10ms == 0){
-		Tempo_10ms = 200;
-		acionar_10ms = true;
+	if(--Tempo_200ms == 0){
+		Tempo_200ms = 100;
+		acionar_200ms = true;
+		
+		
+		if (leds[0].piscando) 
+		{
+	    	if (leds[0].blink_count < leds[0].blink_target) {
+				XMC_GPIO_ToggleOutput(leds[0].port, leds[0].pin);
+				leds[0].blink_count++;
+	        }else{
+	        	leds[0].piscando = false;
+	            XMC_GPIO_SetOutputLow(leds[0].port, leds[0].pin); // garante desligado
+	        }
+	    }
+		
+		
 	}
 		
-	if(--Tempo_1000ms == 0){
-		Tempo_1000ms = 3000;
-		acionar_1000ms = true;			
+	if(--Tempo_3000ms == 0){
+		Tempo_3000ms = 3000;
+		acionar_3000ms = true;
+		
+		if(!cadastrado)
+		{
+			blink_led_ST(6);
+		}else{
+			blink_led_ST(1);
+		}			
 	}
 	
 	systick++;
@@ -168,11 +211,12 @@ void Controle(){
 				{
 					cadastrado = true;
 					estado = GET_UID;
-				}else if(Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3 && cadastrado)
+					numero_modulo = Rx_buffer[7];
+				}else if(Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
 				{
 					
 					estado = STATUS_RL;
-				}else if(Rx_buffer[5] == 'T' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3 && cadastrado)
+				}else if(Rx_buffer[5] == 'T' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
 				{
 					
 					estado = RL_CONTROL;
@@ -181,8 +225,7 @@ void Controle(){
 					estado = LIMPAR;
 				}
 			}
-			
-	
+		
 			
 		}break;
 		
