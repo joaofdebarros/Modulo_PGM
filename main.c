@@ -203,18 +203,17 @@ void SysTick_Handler(void)
 //Máquina de estados
 void Controle(){
 	
-	#define INICIO		0
+	#define RECEIVE		0
 	#define GET_UID		1
-	#define VALIDATE		2
-	#define STATUS_RL	3
-	#define RL_CONTROL	4
-	#define TRANSMIT	5
-	#define DELAY_ENVIO 6
-	#define LIMPAR		7
+	#define STATUS_RL	2
+	#define RL_CONTROL	3
+	#define TRANSMIT	4
+	#define DELAY_ENVIO 5
+	#define LIMPAR		6
 	
 	switch (estado) 
 	{
-		case INICIO:	
+		case RECEIVE:	
 		{
 			
 			XMC_GPIO_SetOutputHigh(Bus_Controle_PORT, Bus_Controle_PIN);
@@ -401,7 +400,7 @@ void Controle(){
 			}
 			
 			pacote_completo = false;
-			estado = INICIO;
+			estado = RECEIVE;
 			
 		}break;
 	}
