@@ -33,15 +33,13 @@ uint8_t checksum = 0;
 uint8_t estado = 0;
 
 //Variáveis de tempo/delays
-uint8_t Tempo_200ms = 10; 
-uint16_t Tempo_2000ms = 1000;
+uint8_t Blinking_gap = 10; 
+uint16_t Blink_wait = 1000;
 uint8_t piscadas = 0;
 uint8_t numero_modulo = 0;
 volatile uint32_t systick = 0;
 volatile uint32_t delay_tx = 0;
 volatile bool aguardando_envio = false;
-volatile bool acionar_200ms = false;
-volatile bool acionar_2000ms = false;
 volatile bool piscando = false;
 
 //União bitflag
@@ -113,6 +111,16 @@ void USIC0_1_IRQHandler(void)
 			
 		}
 		
+		if(pacote_completo)
+			{
+				if(Rx_buffer[5] == 'A' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
+				{
+					cadastrado = true;
+					numero_modulo = Rx_buffer[7];
+					
+				}
+			}
+		
 		if((TAMANHO_BUFFER - Rx_buffer_index) < UART1_RXFIFO_LIMIT)
 	    {
 	        XMC_USIC_CH_RXFIFO_SetSizeTriggerLimit(UART1_HW, XMC_USIC_CH_FIFO_SIZE_8WORDS, (TAMANHO_BUFFER - Rx_buffer_index) - 1);
@@ -155,14 +163,13 @@ void SysTick_Handler(void)
 		ticks = 0;
 	}	
 	
-	if(--Tempo_200ms == 0){
+	if(--Blinking_gap == 0){
 		
-//		acionar_200ms = true;
 		if(cadastrado)
 		{
-			Tempo_200ms = 200;
+			Blinking_gap = 200;
 		}else{
-			Tempo_200ms = 100;
+			Blinking_gap = 100;
 		}
 		
 		if (leds[0].piscando) 
@@ -171,8 +178,8 @@ void SysTick_Handler(void)
 				XMC_GPIO_ToggleOutput(leds[0].port, leds[0].pin);
 				leds[0].blink_count++;
 	        }else{
-				if(cadastrado){Tempo_2000ms = 1000;}
-				if(!cadastrado){Tempo_2000ms = 100;}
+				if(cadastrado){Blink_wait = 1000;}
+				if(!cadastrado){Blink_wait = 100;}
 	        	leds[0].piscando = false;
 	            XMC_GPIO_SetOutputHigh(leds[0].port, leds[0].pin); // garante desligado
 	        }
@@ -181,9 +188,7 @@ void SysTick_Handler(void)
 		
 	}
 		
-	if(--Tempo_2000ms == 0){
-		
-//		acionar_2000ms = true;
+	if(--Blink_wait == 0){
 		
 		if(!cadastrado)
 		{
@@ -200,11 +205,12 @@ void Controle(){
 	
 	#define INICIO		0
 	#define GET_UID		1
-	#define STATUS_RL	2
-	#define RL_CONTROL	3
-	#define TRANSMIT	4
-	#define DELAY_ENVIO 5
-	#define LIMPAR		6
+	#define VALIDATE		2
+	#define STATUS_RL	3
+	#define RL_CONTROL	4
+	#define TRANSMIT	5
+	#define DELAY_ENVIO 6
+	#define LIMPAR		7
 	
 	switch (estado) 
 	{
@@ -216,9 +222,7 @@ void Controle(){
 			{
 				if(Rx_buffer[5] == 'A' && !cadastrado)
 				{
-					cadastrado = true;
 					estado = GET_UID;
-					numero_modulo = Rx_buffer[7];
 				}else if(Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
 				{
 					
@@ -398,7 +402,6 @@ void Controle(){
 			
 			pacote_completo = false;
 			estado = INICIO;
-			
 			
 		}break;
 	}
