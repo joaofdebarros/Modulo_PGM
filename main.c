@@ -224,7 +224,8 @@ void Controle(){
 					estado = GET_UID;
 				}else if(Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
 				{
-					
+					cadastrado = true;
+					numero_modulo = Rx_buffer[7];
 					estado = STATUS_RL;
 				}else if(Rx_buffer[5] == 'T' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
 				{
