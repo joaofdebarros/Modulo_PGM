@@ -34,14 +34,14 @@ uint8_t estado = 0;
 
 //Variáveis de tempo/delays
 uint8_t Tempo_200ms = 10; 
-uint16_t Tempo_3000ms = 1000;
+uint16_t Tempo_2000ms = 1000;
 uint8_t piscadas = 0;
 uint8_t numero_modulo = 0;
 volatile uint32_t systick = 0;
 volatile uint32_t delay_tx = 0;
 volatile bool aguardando_envio = false;
 volatile bool acionar_200ms = false;
-volatile bool acionar_3000ms = false;
+volatile bool acionar_2000ms = false;
 volatile bool piscando = false;
 
 //União bitflag
@@ -138,7 +138,7 @@ void get_UID(){
 
 void blink_led_ST(uint8_t n)
 {
-
+	
     leds[0].blink_target = n * 2; // *2 porque liga/desliga conta 2 vezes
     leds[0].blink_count = 0;
     leds[0].piscando = true;
@@ -156,9 +156,14 @@ void SysTick_Handler(void)
 	}	
 	
 	if(--Tempo_200ms == 0){
-		Tempo_200ms = 100;
-		acionar_200ms = true;
 		
+//		acionar_200ms = true;
+		if(cadastrado)
+		{
+			Tempo_200ms = 200;
+		}else{
+			Tempo_200ms = 100;
+		}
 		
 		if (leds[0].piscando) 
 		{
@@ -166,23 +171,25 @@ void SysTick_Handler(void)
 				XMC_GPIO_ToggleOutput(leds[0].port, leds[0].pin);
 				leds[0].blink_count++;
 	        }else{
+				if(cadastrado){Tempo_2000ms = 1000;}
+				if(!cadastrado){Tempo_2000ms = 100;}
 	        	leds[0].piscando = false;
-	            XMC_GPIO_SetOutputLow(leds[0].port, leds[0].pin); // garante desligado
+	            XMC_GPIO_SetOutputHigh(leds[0].port, leds[0].pin); // garante desligado
 	        }
 	    }
 		
 		
 	}
 		
-	if(--Tempo_3000ms == 0){
-		Tempo_3000ms = 3000;
-		acionar_3000ms = true;
+	if(--Tempo_2000ms == 0){
+		
+//		acionar_2000ms = true;
 		
 		if(!cadastrado)
 		{
-			blink_led_ST(6);
+			blink_led_ST(4);
 		}else{
-			blink_led_ST(1);
+			blink_led_ST(numero_modulo);
 		}			
 	}
 	
