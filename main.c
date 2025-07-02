@@ -231,6 +231,10 @@ void Controle(){
 				{
 					
 					estado = RL_CONTROL;
+				}else if(Rx_buffer[5] == 'D' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
+				{
+					cadastrado = false;
+					estado = RECEIVE;
 				}else{
 					pacote_obsoleto = true;
 					estado = LIMPAR;
