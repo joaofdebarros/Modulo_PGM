@@ -207,9 +207,10 @@ void Controle(){
 	#define GET_UID		1
 	#define STATUS_RL	2
 	#define RL_CONTROL	3
-	#define TRANSMIT	4
-	#define DELAY_ENVIO 5
-	#define LIMPAR		6
+	#define DELETE		4
+	#define TRANSMIT	5
+	#define DELAY_ENVIO 6
+	#define LIMPAR		7
 	
 	switch (estado) 
 	{
@@ -358,6 +359,23 @@ void Controle(){
 				estado = LIMPAR;
 			}
 			
+		}break;
+		
+		case DELETE:
+		{
+			Buffer_TX[0] = start_byte; 
+			Buffer_TX[1] = TAMANHO_BUFFER;
+			Buffer_TX[2] = UID0;
+			Buffer_TX[3] = UID1;
+			Buffer_TX[4] = UID2;
+			Buffer_TX[5] = UID3;
+			Buffer_TX[6] = 'D';
+			Buffer_TX[7] = 0x02;
+			Buffer_TX[8] = 0x00;				
+			Buffer_TX[9] = checksum = ~(Buffer_TX[0] ^ Buffer_TX[1] ^ Buffer_TX[2] ^ Buffer_TX[3] ^ Buffer_TX[4] ^ Buffer_TX[5] ^ Buffer_TX[6] ^ Buffer_TX[7] ^ Buffer_TX[8]);
+			Buffer_TX[10] = stop_byte;
+			    
+			estado = TRANSMIT;
 		}break;
 		
 		case TRANSMIT:
