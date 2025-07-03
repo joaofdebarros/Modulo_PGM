@@ -29,6 +29,7 @@ uint8_t UID3 = 0;
 uint8_t checksum = 0;
 #define stop_byte 0x81
 
+#define ACK 0x06
 //Máquina de estados
 uint8_t estado = 0;
 
@@ -348,9 +349,9 @@ void Controle(){
 			    Buffer_TX[3] = UID1;
 			    Buffer_TX[4] = UID2;
 			    Buffer_TX[5] = UID3;
-			    Buffer_TX[6] = 'S';
+			    Buffer_TX[6] = 'T';
 			    Buffer_TX[7] = 0x02;
-			    Buffer_TX[8] = status_rele.Byte;				
+			    Buffer_TX[8] = ACK;				
 			    Buffer_TX[9] = checksum = ~(Buffer_TX[0] ^ Buffer_TX[1] ^ Buffer_TX[2] ^ Buffer_TX[3] ^ Buffer_TX[4] ^ Buffer_TX[5] ^ Buffer_TX[6] ^ Buffer_TX[7] ^ Buffer_TX[8]);
 			    Buffer_TX[10] = stop_byte;
 			    
@@ -381,7 +382,7 @@ void Controle(){
 		case TRANSMIT:
 		{
 			
-			delay_tx = systick + 5;
+			delay_tx = systick + 2;
 			aguardando_envio = true;		    
 		    estado = DELAY_ENVIO;
 			
