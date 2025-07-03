@@ -136,14 +136,14 @@ void get_UID(){
 	
 	for (uint8_t Count = 0; Count < 3; Count++)
 	{
-	    UniqueChipID[Count] = UCIDptr[Count];
+	UniqueChipID[Count] = UCIDptr[Count];
 	}
 	
 	UID0 = (UniqueChipID[0] >> 0) & 0xFF;
 	UID1 = (UniqueChipID[0] >> 8) & 0xFF;
-	UID2 = (UniqueChipID[0] >> 16) & 0xFF;
+	UID2 = (UniqueChipID[0] >> 16) & 0xFF;								
 	UID3 = (UniqueChipID[0] >> 24) & 0xFF;
-}
+}				
 
 void blink_led_ST(uint8_t n)
 {
