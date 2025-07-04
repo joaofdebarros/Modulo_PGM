@@ -242,13 +242,13 @@ void Controle() {
       } else if (Rx_buffer[5] == 'T' && Rx_buffer[1] == UID0 &&
                  Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 &&
                  Rx_buffer[4] == UID3) {
-
+		ligar_rele.Byte = Rx_buffer[7];
         estado = RL_CONTROL;
-      } else if (Rx_buffer[5] == 'D' && Rx_buffer[1] == UID0 &&
-                 Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 &&
-                 Rx_buffer[4] == UID3) {
+      } else if (Rx_buffer[5] == 'D') {
+		ligar_rele.Byte = 0x00;
         cadastrado = false;
-        estado = DELETE;
+        pacote_obsoleto = true;
+        estado = RL_CONTROL;
       } else {
         pacote_obsoleto = true;
         estado = LIMPAR;
@@ -314,11 +314,7 @@ void Controle() {
   } break;
 
   case RL_CONTROL: {
-    if (Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 &&
-        Rx_buffer[4] == UID3) {
       // Ligar cada rele conforme solicitado
-      ligar_rele.Byte = Rx_buffer[7];
-
       if (ligar_rele.Bits.rele_1 == 1) {
         XMC_GPIO_SetOutputHigh(RL1_PORT, RL1_PIN);
         status_rele.Bits.rele_1 = 1;
@@ -374,10 +370,6 @@ void Controle() {
       Buffer_TX[10] = stop_byte;
 
       estado = TRANSMIT;
-      
-    } else {
-      estado = LIMPAR;
-    }
 
   } break;
 
