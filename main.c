@@ -34,6 +34,7 @@ uint8_t checksum = 0;
 uint8_t estado = 0;
 
 // Variáveis de tempo/delays
+uint16_t delay_aleatorio = 0;
 uint8_t Blinking_gap = 10;
 uint16_t Blink_wait = 1000;
 uint8_t piscadas = 0;
@@ -69,6 +70,52 @@ typedef struct {
 } LED_t;
 
 LED_t leds[1] = {{LED_ST_PORT, LED_ST_PIN, 0, 0, false}};
+
+// Rotina para salvar o UID do micro
+void get_UID() {
+  uint32_t UniqueChipID[3] = {0, 0, 0};
+
+  volatile uint32_t *UCIDptr = (volatile uint32_t *)0x10000FF0;
+
+  for (uint8_t Count = 0; Count < 3; Count++) {
+    UniqueChipID[Count] = UCIDptr[Count];
+  }
+
+  UID0 = (UniqueChipID[0] >> 0) & 0xFF;
+  UID1 = (UniqueChipID[0] >> 8) & 0xFF;
+  UID2 = (UniqueChipID[0] >> 16) & 0xFF;
+  UID3 = (UniqueChipID[0] >> 24) & 0xFF;
+}
+
+//void get_UID() {
+//  uint32_t *UCIDptr;
+//  uint32_t UniqueChipID = 0;;
+//  
+//  UCIDptr = (uint32_t *)0x40010004;
+//
+//  UniqueChipID = *UCIDptr;
+//  
+//  UID0 = (UniqueChipID) & 0xFFFFFFFF;
+//}
+
+uint16_t gerar_intervalo(uint8_t UID0, uint8_t UID1, uint8_t UID2, uint8_t UID3, uint32_t tempo)
+{
+    // Combina os valores do UID e tempo para criar uma semente pseudoaleatória
+    uint32_t semente = UID0;
+    semente ^= ((uint32_t)UID1 << 8);
+    semente ^= ((uint32_t)UID2 << 16);
+    semente ^= ((uint32_t)UID3 << 24);
+    semente ^= tempo; // misturando com o tempo para aleatoriedade
+
+    // Um pequeno hash para embaralhar a semente
+    semente ^= (semente >> 13);
+    semente *= 0x85ebca6b;
+    semente ^= (semente >> 16);
+
+    // Reduz o valor para o intervalo [20, 500]
+    uint16_t intervalo = 20 + (semente % (500 - 20 + 1));
+    return intervalo;
+}
 
 // Rotina para receber dados
 void USIC0_1_IRQHandler(void) {
@@ -118,21 +165,6 @@ void USIC0_1_IRQHandler(void) {
     }
   }
 }
-// Rotina para salvar o UID do micro
-void get_UID() {
-  uint32_t UniqueChipID[3] = {0, 0, 0};
-
-  volatile uint32_t *UCIDptr = (volatile uint32_t *)0x10000FF0;
-
-  for (uint8_t Count = 0; Count < 3; Count++) {
-    UniqueChipID[Count] = UCIDptr[Count];
-  }
-
-  UID0 = (UniqueChipID[0] >> 0) & 0xFF;
-  UID1 = (UniqueChipID[0] >> 8) & 0xFF;
-  UID2 = (UniqueChipID[0] >> 16) & 0xFF;
-  UID3 = (UniqueChipID[0] >> 24) & 0xFF;
-}
 
 void blink_led_ST(uint8_t n) {
 
@@ -143,13 +175,9 @@ void blink_led_ST(uint8_t n) {
 
 // Rotina para controle dos tempos
 void SysTick_Handler(void) {
-  static uint32_t ticks = 0;
-
-  ticks++;
-  if (ticks == 1000) {
-    ticks = 0;
-  }
-
+  
+  
+  
   if (--Blinking_gap == 0) {
 
     if (cadastrado) {
@@ -220,7 +248,7 @@ void Controle() {
                  Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 &&
                  Rx_buffer[4] == UID3) {
         cadastrado = false;
-        estado = RECEIVE;
+        estado = DELETE;
       } else {
         pacote_obsoleto = true;
         estado = LIMPAR;
@@ -266,6 +294,17 @@ void Controle() {
                                   Buffer_TX[3] ^ Buffer_TX[4] ^ Buffer_TX[5] ^
                                   Buffer_TX[6] ^ Buffer_TX[7] ^ Buffer_TX[8]);
       Buffer_TX[10] = stop_byte;
+      
+      delay_aleatorio = gerar_intervalo(UID0, UID1, UID2, UID3, systick);
+    
+	    if(delay_aleatorio > 500){
+			delay_aleatorio = 82;
+		}
+		
+		if(delay_aleatorio < 20)
+		{
+			delay_aleatorio = 74;
+		}
 
       estado = TRANSMIT;
     } else {
@@ -335,6 +374,7 @@ void Controle() {
       Buffer_TX[10] = stop_byte;
 
       estado = TRANSMIT;
+      
     } else {
       estado = LIMPAR;
     }
@@ -350,7 +390,7 @@ void Controle() {
     Buffer_TX[5] = UID3;
     Buffer_TX[6] = 'D';
     Buffer_TX[7] = 0x02;
-    Buffer_TX[8] = 0x00;
+    Buffer_TX[8] = ACK;
     Buffer_TX[9] = checksum = ~(Buffer_TX[0] ^ Buffer_TX[1] ^ Buffer_TX[2] ^
                                 Buffer_TX[3] ^ Buffer_TX[4] ^ Buffer_TX[5] ^
                                 Buffer_TX[6] ^ Buffer_TX[7] ^ Buffer_TX[8]);
@@ -360,7 +400,13 @@ void Controle() {
   } break;
 
   case TRANSMIT: {
-
+	
+//	if(!cadastrado)
+//	{
+//		delay_tx = systick + gerar_intervalo(UID0, UID1, UID2, UID3, systick);
+//	}else{
+//		delay_tx = systick + 2;
+//	}
     delay_tx = systick + 2;
     aguardando_envio = true;
     estado = DELAY_ENVIO;
@@ -438,7 +484,9 @@ int main(void) {
 
   get_UID();
 
-  while (1) {
+  while (1) 
+  {
     Controle();
+    
   }
 }
