@@ -393,13 +393,13 @@ void Controle() {
 
   case TRANSMIT: {
 	
-//	if(!cadastrado)
-//	{
-//		delay_tx = systick + gerar_intervalo(UID0, UID1, UID2, UID3, systick);
-//	}else{
-//		delay_tx = systick + 2;
-//	}
-    delay_tx = systick + 2;
+	if(!cadastrado)
+	{
+		delay_tx = systick + gerar_intervalo(UID0, UID1, UID2, UID3, systick);
+	}else{
+		delay_tx = systick + 2;
+	}
+//    delay_tx = systick + 2;
     aguardando_envio = true;
     estado = DELAY_ENVIO;
 
