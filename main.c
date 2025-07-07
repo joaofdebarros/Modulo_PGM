@@ -267,7 +267,7 @@ void Controle() {
     Buffer_TX[5] = UID3;
     Buffer_TX[6] = 'A';
     Buffer_TX[7] = 0x02;
-    Buffer_TX[8] = 0x00;
+    Buffer_TX[8] = ACK;
     Buffer_TX[9] = checksum = ~(Buffer_TX[0] ^ Buffer_TX[1] ^ Buffer_TX[2] ^
                                 Buffer_TX[3] ^ Buffer_TX[4] ^ Buffer_TX[5] ^
                                 Buffer_TX[6] ^ Buffer_TX[7] ^ Buffer_TX[8]);
