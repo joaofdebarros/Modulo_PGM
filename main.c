@@ -150,14 +150,6 @@ void USIC0_1_IRQHandler(void) {
       }
     }
 
-    if (pacote_completo) {
-      if (Rx_buffer[5] == 'A' && Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 &&
-          Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3) {
-        cadastrado = true;
-        numero_modulo = Rx_buffer[7];
-      }
-    }
-
     if ((TAMANHO_BUFFER - Rx_buffer_index) < UART1_RXFIFO_LIMIT) {
       XMC_USIC_CH_RXFIFO_SetSizeTriggerLimit(
           UART1_HW, XMC_USIC_CH_FIFO_SIZE_8WORDS,
@@ -232,7 +224,15 @@ void Controle() {
     XMC_GPIO_SetOutputHigh(Bus_Controle_PORT, Bus_Controle_PIN);
     if (pacote_completo) {
       if (Rx_buffer[5] == 'A' && !cadastrado) {
-        estado = GET_UID;
+		
+		if(Rx_buffer[1] == UID0 && Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 && Rx_buffer[4] == UID3)
+		{
+			numero_modulo = Rx_buffer[7];
+			cadastrado = true;
+		}else{
+			estado = GET_UID;
+		}
+        
       } else if (Rx_buffer[5] == 'S' && Rx_buffer[1] == UID0 &&
                  Rx_buffer[2] == UID1 && Rx_buffer[3] == UID2 &&
                  Rx_buffer[4] == UID3) {
@@ -296,15 +296,6 @@ void Controle() {
       Buffer_TX[10] = stop_byte;
       
       delay_aleatorio = gerar_intervalo(UID0, UID1, UID2, UID3, systick);
-    
-	    if(delay_aleatorio > 500){
-			delay_aleatorio = 82;
-		}
-		
-		if(delay_aleatorio < 20)
-		{
-			delay_aleatorio = 74;
-		}
 
       estado = TRANSMIT;
     } else {
@@ -399,7 +390,6 @@ void Controle() {
 	}else{
 		delay_tx = systick + 2;
 	}
-//    delay_tx = systick + 2;
     aguardando_envio = true;
     estado = DELAY_ENVIO;
 
