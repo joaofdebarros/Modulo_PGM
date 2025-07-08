@@ -113,7 +113,7 @@ uint16_t gerar_intervalo(uint8_t UID0, uint8_t UID1, uint8_t UID2, uint8_t UID3,
     semente ^= (semente >> 16);
 
     // Reduz o valor para o intervalo [20, 500]
-    uint16_t intervalo = 20 + (semente % (500 - 20 + 1));
+    uint16_t intervalo = 20 + (semente % (950 - 20 + 1));
     return intervalo;
 }
 
